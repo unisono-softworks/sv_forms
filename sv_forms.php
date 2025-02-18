@@ -1,6 +1,6 @@
 <?php
 /*
-	Version: 2.0.06
+	Version: 2.0.07
 	Plugin Name: SV Forms
 	Text Domain: sv_forms
 	Description: Build forms in the WordPress Gutenberg Block-Editor with ease.
