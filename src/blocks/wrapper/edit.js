@@ -56,16 +56,21 @@ export default class extends Component {
     };
 
     // Checks if the block already exists inside the current post
-    doesFormExist = () => {
-        const currentMeta   = getEditedPostAttribute( 'meta' );
-        const currentForms  = currentMeta._sv_forms_forms ? JSON.parse( currentMeta._sv_forms_forms ) : false;
-
-        if ( ! currentForms || ! currentForms[ this.props.attributes.formId ] ) return false;
-
-        return true;
-    };
-
-    // Checks if this block is a duplicate of an existing one in the current post
+	doesFormExist = () => {
+		const meta = getEditedPostAttribute('meta') || {};
+		const formId = this.props?.attributes?.formId;
+		if (!formId) return false;
+		
+		try {
+			const forms = JSON.parse(meta._sv_forms_forms || '{}');
+			return !!forms[formId];
+		} catch {
+			return false;
+		}
+	};
+	
+	
+	// Checks if this block is a duplicate of an existing one in the current post
     isDuplicate = () => {
         const currentBlocks = wp.data.select('core/block-editor').getBlocks();
         let formsWithSameId = 0;
@@ -87,28 +92,44 @@ export default class extends Component {
     };
 
     // Updates the current post meta with the block attributes
-    updatePostMeta = action => {
-        if ( ! this.props.attributes.formId ) return false;
-
-        const currentMeta = getEditedPostAttribute( 'meta' );
-        let currentForms  = currentMeta._sv_forms_forms ? JSON.parse( currentMeta._sv_forms_forms ) : {};
-
-        switch ( action ) {
-            case 'update':
-                currentForms[ this.props.attributes.formId ] = this.props.attributes;
-                break;
-            case 'remove':
-                delete currentForms[ this.props.attributes.formId ];
-                break;
-
-        }
-        
-        const newMeta = { ...currentMeta, _sv_forms_forms: JSON.stringify( currentForms ) };
-
-        editPost( { meta: newMeta } );
-    };
-
-    // Togles the collapsed state of the body
+	updatePostMeta = (action) => {
+		const formId = this.props?.attributes?.formId;
+		if (!formId) return false;
+		
+		const currentMeta = getEditedPostAttribute('meta') || {};
+		
+		let currentForms = {};
+		try {
+			currentForms = JSON.parse(currentMeta._sv_forms_forms || '{}') || {};
+		} catch (e) {
+			currentForms = {};
+		}
+		
+		switch (action) {
+			case 'update':
+				currentForms[formId] = this.props.attributes;
+				break;
+			
+			case 'remove':
+				delete currentForms[formId];
+				break;
+			
+			default:
+				return false;
+		}
+		
+		editPost({
+			meta: {
+				...currentMeta,
+				_sv_forms_forms: JSON.stringify(currentForms),
+			},
+		});
+		
+		return true;
+	};
+	
+	
+	// Togles the collapsed state of the body
     toggleBody = change => {
         const body = jQuery( 'div[data-block="' + this.props.clientId + '"] .' + this.props.className + ' > .sv_forms_body' );
         const icon = jQuery( 'div[data-block="' + this.props.clientId + '"] .' + this.props.className + ' > .sv_forms_header > .sv_forms_label_wrapper > button.components-button > span' );
