@@ -19,6 +19,7 @@ class submission extends modules {
         $post_id = isset( $_POST[ $this->get_root()->get_prefix( 'post_id' ) ] )
             ? $_POST[ $this->get_root()->get_prefix( 'post_id' ) ]
             : false;
+
 		//$post_id	= $this->get_input_value( $this->get_root()->get_prefix( 'post_id' ), $form_data );
         // HOTFIX WRONG FILTERED ID ----------------------------------------------------------------
 		$post_meta 	= json_decode( get_post_meta( $post_id, '_sv_forms_forms', true ) );

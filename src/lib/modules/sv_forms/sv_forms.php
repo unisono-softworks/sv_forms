@@ -21,7 +21,7 @@ class sv_forms extends modules {
 
 		// Actions Hooks & Filter
 		add_action( 'init', array( $this, 'register_block_assets' ) );
-		add_action( 'init', array( $this, 'register_post_meta' ), 9999 );
+		add_action( 'init', array( $this, 'register_post_meta' ), 15 );
 		add_filter( 'block_categories_all', array( $this, 'block_categories' ), 10, 2 );
 	}
 
@@ -144,33 +144,19 @@ class sv_forms extends modules {
 
 	// Registers a custom post meta field, for the block attributes
 	public function register_post_meta() {
-		register_meta('post', '_sv_forms_forms', [
-			'object_subtype' => '',          // all post types
-			'show_in_rest'   => true,
-			'type'           => 'string',
-			'single'         => true,
-			'default'        => '{}',
-			'sanitize_callback' => function ($value) {
-				// store always as JSON string
-				if (is_array($value) || is_object($value)) {
-					return wp_json_encode($value);
-				}
-
-				if (!is_string($value)) {
-					return '{}';
-				}
-
-				$decoded = json_decode($value, true);
-				return (json_last_error() === JSON_ERROR_NONE)
-					? wp_json_encode($decoded)
-					: '{}';
-			},
-			'auth_callback'  => function () {
-				return current_user_can('edit_posts');
-			},
-		]);
+		foreach (['post', 'event'] as $post_type) {
+			register_post_meta($post_type, '_sv_forms_forms', [
+				'show_in_rest'   => true,
+				'type'          => 'string',
+				'single'        => true,
+				'auth_callback' => function() {
+					return current_user_can('edit_posts');
+				},
+			]);
+		}
 	}
-	
+
+
 	// Registers the straightvisions block category
 	public function block_categories( $categories ) {
 		$category_slugs = wp_list_pluck( $categories, 'slug' );
