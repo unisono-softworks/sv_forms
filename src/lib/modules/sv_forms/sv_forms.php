@@ -144,15 +144,21 @@ class sv_forms extends modules {
 
 	// Registers a custom post meta field, for the block attributes
 	public function register_post_meta() {
-		foreach (['post', 'event'] as $post_type) {
-			register_post_meta($post_type, '_sv_forms_forms', [
-				'show_in_rest'   => true,
-				'type'          => 'string',
-				'single'        => true,
-				'auth_callback' => function() {
-					return current_user_can('edit_posts');
+		$post_types = get_post_types( [
+			'public'       => true,
+			'show_in_rest' => true,
+		], 'names' );
+
+		foreach ( $post_types as $post_type ) {
+			register_post_meta( $post_type, '_sv_forms_forms', [
+				'show_in_rest'      => true,
+				'type'              => 'string',
+				'single'            => true,
+				'sanitize_callback' => 'wp_kses_post',
+				'auth_callback'     => function() {
+					return current_user_can( 'edit_posts' );
 				},
-			]);
+			] );
 		}
 	}
 

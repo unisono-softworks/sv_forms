@@ -15,10 +15,10 @@ class modules extends init {
 		$this->load_module('archive');			// Dependency: taxonomy module - Only init after taxonomy init
 
 		// The following module init order can be changed
+		$this->load_module('sv_forms');
 		$this->load_module('files');
 		$this->load_module('submission');
 		$this->load_module('personal_data');
-		$this->load_module('sv_forms');
 
 		$this->load_module('update');
 	}

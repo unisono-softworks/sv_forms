@@ -3,6 +3,9 @@ namespace sv_forms;
 
 class submission extends modules {
 	public function init() {
+		/*var_dump(json_decode( get_post_meta( 298529, '_sv_forms_forms', true )));
+		var_dump(get_post_meta( 298529, '_sv_forms_forms', true ));
+		die;*/
 		// Actions Hooks & Filter
 		add_action( 'wp_ajax_sv_forms_submit', array( $this, 'ajax_sv_forms_submit' ) );
 		add_action( 'wp_ajax_nopriv_sv_forms_submit', array( $this, 'ajax_sv_forms_submit' ) );
@@ -22,9 +25,27 @@ class submission extends modules {
 
 		//$post_id	= $this->get_input_value( $this->get_root()->get_prefix( 'post_id' ), $form_data );
         // HOTFIX WRONG FILTERED ID ----------------------------------------------------------------
-		$post_meta 	= json_decode( get_post_meta( $post_id, '_sv_forms_forms', true ) );
+		$meta_raw = get_post_meta( $post_id, '_sv_forms_forms', true );
+
+		$meta_raw = str_replace(
+			[ "\r\n", "\r", "\n" ],
+			'\\n',
+			$meta_raw
+		);
+
+		$post_meta = json_decode( $meta_raw );
+
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			error_log( 'SV Forms JSON decode error: ' . json_last_error_msg() );
+			error_log( 'SV Forms post_id: ' . $post_id );
+			error_log( 'SV Forms meta_raw: ' . $meta_raw );
+
+			return;
+		}
+
 
 		if ( $post_meta && $form_id && $post_meta->$form_id ) {
+			error_log('form_id: ' . $form_id);
 			$this->handle_submission( $post_meta->$form_id, $form_data );
 		}
 	}
@@ -33,7 +54,7 @@ class submission extends modules {
 	private function handle_submission( object $attr, array $data ): submission {
 		$sanitized_data = $this->get_sanitized_data( $attr, $data );
 
-		if ( ! $this->spam_guard_check->run_check( $attr, $sanitized_data ) ) {
+		if ( $this->spam_guard_check->run_check( $attr, $sanitized_data ) === false ) {
 			// Creates custom action hook, that passes a form data array and a form attr object
 			// action name: sv_forms_form_submit
 			do_action( $this->get_root()->get_prefix( 'form_submit' ), $sanitized_data, $attr );
